@@ -9,14 +9,12 @@ project.addAssets("D:/Blender 2.93/ArmorySDK/lib/haxebullet/ammo/ammo.wasm.js", 
 project.addAssets("D:/Blender 2.93/ArmorySDK/lib/haxebullet/ammo/ammo.wasm.wasm", { notinlist: true });
 project.addParameter('arm.CameraController');
 project.addParameter("--macro keep('arm.CameraController')");
+project.addParameter('armory.trait.physics.bullet.PhysicsWorld');
+project.addParameter("--macro keep('armory.trait.physics.bullet.PhysicsWorld')");
 project.addParameter('armory.trait.physics.bullet.RigidBody');
 project.addParameter("--macro keep('armory.trait.physics.bullet.RigidBody')");
 project.addParameter('arm.CharacterController');
 project.addParameter("--macro keep('arm.CharacterController')");
-project.addParameter('armory.trait.physics.bullet.PhysicsWorld');
-project.addParameter("--macro keep('armory.trait.physics.bullet.PhysicsWorld')");
-project.addParameter('armory.trait.WalkNavigation');
-project.addParameter("--macro keep('armory.trait.WalkNavigation')");
 project.addParameter('armory.trait.internal.UniformsManager');
 project.addParameter("--macro keep('armory.trait.internal.UniformsManager')");
 project.addShaders("build_Start/compiled/Shaders/*.glsl", { noembed: false});

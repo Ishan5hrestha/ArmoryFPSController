@@ -54,14 +54,12 @@
 -js krom\krom.js.temp
 arm.CameraController
 --macro keep('arm.CameraController')
+armory.trait.physics.bullet.PhysicsWorld
+--macro keep('armory.trait.physics.bullet.PhysicsWorld')
 armory.trait.physics.bullet.RigidBody
 --macro keep('armory.trait.physics.bullet.RigidBody')
 arm.CharacterController
 --macro keep('arm.CharacterController')
-armory.trait.physics.bullet.PhysicsWorld
---macro keep('armory.trait.physics.bullet.PhysicsWorld')
-armory.trait.WalkNavigation
---macro keep('armory.trait.WalkNavigation')
 armory.trait.internal.UniformsManager
 --macro keep('armory.trait.internal.UniformsManager')
 -main Main

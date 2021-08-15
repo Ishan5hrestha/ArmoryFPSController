@@ -81,17 +81,13 @@ class CharacterController extends iron.Trait {
 			rb.disableGravity();
 			velocity.set(moveX.value(), moveY.value(), 0.0);
 			velocity.normalize(); // Normalize the vector to don't go too fast diagonally. You can remove this line to see what happens
-			velocity.mult(speed+run_speed*sprint.value());
+			velocity.mult(speed+run_speed*sprint.value());											// for run
 			helpQuat.fromTo(object.transform.right(), Scene.active.camera.transform.right());
 			velocity.applyQuat(helpQuat);
 			helpQuat.fromTo(Vec4.zAxis(), hit.normal);
 			velocity.applyQuat(helpQuat);
-			rb.setLinearVelocity(velocity.x, velocity.y, velocity.z);
+			rb.setLinearVelocity(velocity.x, velocity.y, velocity.z + jumpImpulse * jump.value());	//for Jumping
 
-			//Jump
-			if(jump.started()){
-				rb.setLinearVelocity(velocity.x, velocity.y, jumpImpulse);
-			}
 		}
 			
 	}
