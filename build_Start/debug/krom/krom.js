@@ -435,7 +435,8 @@ arm_CameraController.prototype = $extend(iron_Trait.prototype,{
 var arm_CharacterController = function() {
 	this.jumpImpulse = 7;
 	this.gravity = new iron_math_Vec4(0.0,0.0,-9.8);
-	this.scanDepth = 1.1;
+	this.extraRange = 0.1;
+	this.groundMask = 1;
 	this.helpQuat = new iron_math_Quat();
 	this.velocity = new iron_math_Vec4();
 	this.sprint = new armory_system_InputMap();
@@ -460,8 +461,10 @@ arm_CharacterController.prototype = $extend(iron_Trait.prototype,{
 	,rb: null
 	,velocity: null
 	,helpQuat: null
+	,groundTest: null
+	,groundMask: null
+	,extraRange: null
 	,physWorld: null
-	,scanDepth: null
 	,gravity: null
 	,jumpImpulse: null
 	,init: function() {
@@ -483,12 +486,12 @@ arm_CharacterController.prototype = $extend(iron_Trait.prototype,{
 	}
 	,update: function() {
 		var _this = this.object.transform.world;
-		var objectLoc = new iron_math_Vec4(_this.self._30,_this.self._31,_this.self._32,_this.self._33);
-		var rayLoc = new iron_math_Vec4(objectLoc.x,objectLoc.y,objectLoc.z,objectLoc.w);
-		rayLoc.z -= this.scanDepth;
-		var hit = this.physWorld.rayCast(objectLoc,rayLoc,1,2);
-		var btvec = this.rb.getLinearVelocity();
-		if(hit == null) {
+		var loc = new iron_math_Vec4(_this.self._30,_this.self._31,_this.self._32,_this.self._33);
+		var rot = this.object.transform.rot;
+		var radius = this.object.transform.dim.y * 0.5;
+		var height = this.object.transform.dim.z * 0.5;
+		this.groundTest = internal_OctagonalRayCast.getCylinder(loc,rot,this.groundMask,radius,radius,-(height + this.extraRange));
+		if(this.groundTest == null) {
 			this.rb.enableGravity();
 		} else {
 			this.rb.disableGravity();
@@ -657,7 +660,7 @@ arm_CharacterController.prototype = $extend(iron_Trait.prototype,{
 			var v1_y = y;
 			var v1_z = z;
 			var v1_w = 1.0;
-			var v2 = hit.normal;
+			var v2 = this.groundTest.normal;
 			var a = iron_math_Quat.helpVec0;
 			var dot = v1_x * v2.x + v1_y * v2.y + v1_z * v2.z;
 			if(dot < -0.999999) {
@@ -6944,6 +6947,148 @@ haxe_iterators_ArrayIterator.prototype = {
 		return this.array[this.current++];
 	}
 	,__class__: haxe_iterators_ArrayIterator
+};
+var internal_OctagonalRayCast = function() { };
+$hxClasses["internal.OctagonalRayCast"] = internal_OctagonalRayCast;
+internal_OctagonalRayCast.__name__ = "internal.OctagonalRayCast";
+internal_OctagonalRayCast.getPyramid = function(location,rotation,mask,scaleX,scaleY,scaleZ) {
+	var _this = internal_OctagonalRayCast.to;
+	_this.x = 0.0;
+	_this.y = 0.0;
+	_this.z = scaleZ;
+	_this.w = 1.0;
+	var _this = internal_OctagonalRayCast.to;
+	var ix = rotation.w * _this.x + rotation.y * _this.z - rotation.z * _this.y;
+	var iy = rotation.w * _this.y + rotation.z * _this.x - rotation.x * _this.z;
+	var iz = rotation.w * _this.z + rotation.x * _this.y - rotation.y * _this.x;
+	var iw = -rotation.x * _this.x - rotation.y * _this.y - rotation.z * _this.z;
+	_this.x = ix * rotation.w + iw * -rotation.x + iy * -rotation.z - iz * -rotation.y;
+	_this.y = iy * rotation.w + iw * -rotation.y + iz * -rotation.x - ix * -rotation.z;
+	_this.z = iz * rotation.w + iw * -rotation.z + ix * -rotation.y - iy * -rotation.x;
+	var _this = internal_OctagonalRayCast.to;
+	_this.x += location.x;
+	_this.y += location.y;
+	_this.z += location.z;
+	internal_OctagonalRayCast.hit = armory_trait_physics_bullet_PhysicsWorld.active.rayCast(location,internal_OctagonalRayCast.to,mask);
+	if(internal_OctagonalRayCast.hit == null) {
+		var _g = 0;
+		var _g1 = internal_OctagonalRayCast.coords;
+		while(_g < _g1.length) {
+			var c = _g1[_g];
+			++_g;
+			var _this = internal_OctagonalRayCast.to;
+			_this.x = c[0];
+			_this.y = c[1];
+			_this.z = 0.0;
+			_this.w = 1.0;
+			var _this1 = internal_OctagonalRayCast.to;
+			var n = Math.sqrt(_this1.x * _this1.x + _this1.y * _this1.y + _this1.z * _this1.z);
+			if(n > 0.0) {
+				var invN = 1.0 / n;
+				_this1.x *= invN;
+				_this1.y *= invN;
+				_this1.z *= invN;
+			}
+			internal_OctagonalRayCast.to.x *= scaleX;
+			internal_OctagonalRayCast.to.y *= scaleY;
+			internal_OctagonalRayCast.to.z = scaleZ;
+			var _this2 = internal_OctagonalRayCast.to;
+			var ix = rotation.w * _this2.x + rotation.y * _this2.z - rotation.z * _this2.y;
+			var iy = rotation.w * _this2.y + rotation.z * _this2.x - rotation.x * _this2.z;
+			var iz = rotation.w * _this2.z + rotation.x * _this2.y - rotation.y * _this2.x;
+			var iw = -rotation.x * _this2.x - rotation.y * _this2.y - rotation.z * _this2.z;
+			_this2.x = ix * rotation.w + iw * -rotation.x + iy * -rotation.z - iz * -rotation.y;
+			_this2.y = iy * rotation.w + iw * -rotation.y + iz * -rotation.x - ix * -rotation.z;
+			_this2.z = iz * rotation.w + iw * -rotation.z + ix * -rotation.y - iy * -rotation.x;
+			var _this3 = internal_OctagonalRayCast.to;
+			_this3.x += location.x;
+			_this3.y += location.y;
+			_this3.z += location.z;
+			internal_OctagonalRayCast.hit = armory_trait_physics_bullet_PhysicsWorld.active.rayCast(location,internal_OctagonalRayCast.to,mask);
+			if(internal_OctagonalRayCast.hit != null) {
+				break;
+			}
+		}
+	}
+	return internal_OctagonalRayCast.hit;
+};
+internal_OctagonalRayCast.getCylinder = function(location,rotation,mask,scaleX,scaleY,scaleZ) {
+	var _this = internal_OctagonalRayCast.to;
+	_this.x = 0.0;
+	_this.y = 0.0;
+	_this.z = scaleZ;
+	_this.w = 1.0;
+	var _this = internal_OctagonalRayCast.to;
+	var ix = rotation.w * _this.x + rotation.y * _this.z - rotation.z * _this.y;
+	var iy = rotation.w * _this.y + rotation.z * _this.x - rotation.x * _this.z;
+	var iz = rotation.w * _this.z + rotation.x * _this.y - rotation.y * _this.x;
+	var iw = -rotation.x * _this.x - rotation.y * _this.y - rotation.z * _this.z;
+	_this.x = ix * rotation.w + iw * -rotation.x + iy * -rotation.z - iz * -rotation.y;
+	_this.y = iy * rotation.w + iw * -rotation.y + iz * -rotation.x - ix * -rotation.z;
+	_this.z = iz * rotation.w + iw * -rotation.z + ix * -rotation.y - iy * -rotation.x;
+	var _this = internal_OctagonalRayCast.to;
+	_this.x += location.x;
+	_this.y += location.y;
+	_this.z += location.z;
+	internal_OctagonalRayCast.hit = armory_trait_physics_bullet_PhysicsWorld.active.rayCast(location,internal_OctagonalRayCast.to,mask);
+	if(internal_OctagonalRayCast.hit == null) {
+		var _g = 0;
+		var _g1 = internal_OctagonalRayCast.coords;
+		while(_g < _g1.length) {
+			var c = _g1[_g];
+			++_g;
+			var _this = internal_OctagonalRayCast.from;
+			_this.x = c[0];
+			_this.y = c[1];
+			_this.z = 0.0;
+			_this.w = 1.0;
+			var _this1 = internal_OctagonalRayCast.from;
+			var n = Math.sqrt(_this1.x * _this1.x + _this1.y * _this1.y + _this1.z * _this1.z);
+			if(n > 0.0) {
+				var invN = 1.0 / n;
+				_this1.x *= invN;
+				_this1.y *= invN;
+				_this1.z *= invN;
+			}
+			internal_OctagonalRayCast.from.x *= scaleX;
+			internal_OctagonalRayCast.from.y *= scaleY;
+			var _this2 = internal_OctagonalRayCast.from;
+			var ix = rotation.w * _this2.x + rotation.y * _this2.z - rotation.z * _this2.y;
+			var iy = rotation.w * _this2.y + rotation.z * _this2.x - rotation.x * _this2.z;
+			var iz = rotation.w * _this2.z + rotation.x * _this2.y - rotation.y * _this2.x;
+			var iw = -rotation.x * _this2.x - rotation.y * _this2.y - rotation.z * _this2.z;
+			_this2.x = ix * rotation.w + iw * -rotation.x + iy * -rotation.z - iz * -rotation.y;
+			_this2.y = iy * rotation.w + iw * -rotation.y + iz * -rotation.x - ix * -rotation.z;
+			_this2.z = iz * rotation.w + iw * -rotation.z + ix * -rotation.y - iy * -rotation.x;
+			var _this3 = internal_OctagonalRayCast.from;
+			_this3.x += location.x;
+			_this3.y += location.y;
+			_this3.z += location.z;
+			var _this4 = internal_OctagonalRayCast.to;
+			_this4.x = 0.0;
+			_this4.y = 0.0;
+			_this4.z = scaleZ;
+			_this4.w = 1.0;
+			var _this5 = internal_OctagonalRayCast.to;
+			var ix1 = rotation.w * _this5.x + rotation.y * _this5.z - rotation.z * _this5.y;
+			var iy1 = rotation.w * _this5.y + rotation.z * _this5.x - rotation.x * _this5.z;
+			var iz1 = rotation.w * _this5.z + rotation.x * _this5.y - rotation.y * _this5.x;
+			var iw1 = -rotation.x * _this5.x - rotation.y * _this5.y - rotation.z * _this5.z;
+			_this5.x = ix1 * rotation.w + iw1 * -rotation.x + iy1 * -rotation.z - iz1 * -rotation.y;
+			_this5.y = iy1 * rotation.w + iw1 * -rotation.y + iz1 * -rotation.x - ix1 * -rotation.z;
+			_this5.z = iz1 * rotation.w + iw1 * -rotation.z + ix1 * -rotation.y - iy1 * -rotation.x;
+			var _this6 = internal_OctagonalRayCast.to;
+			var v = internal_OctagonalRayCast.from;
+			_this6.x += v.x;
+			_this6.y += v.y;
+			_this6.z += v.z;
+			internal_OctagonalRayCast.hit = armory_trait_physics_bullet_PhysicsWorld.active.rayCast(internal_OctagonalRayCast.from,internal_OctagonalRayCast.to,mask);
+			if(internal_OctagonalRayCast.hit != null) {
+				break;
+			}
+		}
+	}
+	return internal_OctagonalRayCast.hit;
 };
 var iron_App = function(done) {
 	done();
@@ -50155,6 +50300,9 @@ armory_trait_physics_bullet_RigidBody.usersCache = new haxe_ds_ObjectMap();
 haxe_Unserializer.DEFAULT_RESOLVER = new haxe__$Unserializer_DefaultResolver();
 haxe_Unserializer.BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789%:";
 haxe_io_FPHelper.helper = new DataView(new ArrayBuffer(8));
+internal_OctagonalRayCast.coords = [[0.0,1.0],[1.0,1.0],[1.0,0.0],[1.0,-1.0],[0.0,-1.0],[-1.0,-1.0],[-1.0,0.0],[-1.0,1.0]];
+internal_OctagonalRayCast.from = new iron_math_Vec4();
+internal_OctagonalRayCast.to = new iron_math_Vec4();
 iron_App.traitInits = [];
 iron_App.traitUpdates = [];
 iron_App.traitLateUpdates = [];

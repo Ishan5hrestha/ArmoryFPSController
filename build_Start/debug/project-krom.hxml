@@ -1,6 +1,6 @@
 -cp D:\Blender 2.93\ArmorySDK\Kha\Sources
 -cp D:\Blender 2.93\ArmorySDK\Kha\Backends\Krom
--cp C:\Users\ishan\OneDrive\Desktop\Char_Controller_Example\now\Sources
+-cp C:\Users\ishan\OneDrive\Desktop\mine\now\Sources
 -cp D:\Blender 2.93\ArmorySDK\armory\Sources
 -cp D:\Blender 2.93\ArmorySDK\iron\Sources
 -cp D:\Blender 2.93\ArmorySDK\lib\haxebullet\Sources
@@ -52,6 +52,8 @@
 -D kha_version=1810
 -D kha_project_name=Start_1_0_0
 -js krom\krom.js.temp
+armory.trait.internal.UniformsManager
+--macro keep('armory.trait.internal.UniformsManager')
 arm.CameraController
 --macro keep('arm.CameraController')
 armory.trait.physics.bullet.PhysicsWorld
@@ -60,6 +62,4 @@ armory.trait.physics.bullet.RigidBody
 --macro keep('armory.trait.physics.bullet.RigidBody')
 arm.CharacterController
 --macro keep('arm.CharacterController')
-armory.trait.internal.UniformsManager
---macro keep('armory.trait.internal.UniformsManager')
 -main Main

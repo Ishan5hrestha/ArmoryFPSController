@@ -9,6 +9,8 @@ import armory.trait.physics.RigidBody;
 import armory.trait.physics.bullet.PhysicsWorld;
 import armory.system.InputMap;
 
+import internal.OctagonalRayCast; // Import custom ray caster
+
 class CharacterController extends iron.Trait {
 
 	var run_speed = 5.0; //additional speed
@@ -25,8 +27,12 @@ class CharacterController extends iron.Trait {
 
 	var helpQuat = new Quat();
 
+	var groundTest: Null<Hit>; // Ground test
+	var groundMask = 1; // Ground search mask
+	var extraRange = 0.1;
+
+
 	var physWorld: PhysicsWorld; // Physics world
-	var scanDepth = 1.1; // Depth to which ray must be cast
 
 	var gravity = new Vec4(0.0,0.0,-9.8);
 
@@ -63,31 +69,28 @@ class CharacterController extends iron.Trait {
 
 	function update() {
 		//Checking if on ground
-		var objectLoc = object.transform.world.getLoc();
-		var rayLoc = objectLoc.clone();
-		rayLoc.z -= scanDepth;
-		var hit = physWorld.rayCast(objectLoc, rayLoc, 1, 2);
-		
-		//When on ground
-		var btvec = rb.getLinearVelocity();
-		
-		if (hit==null) {
-			//rb.setLinearVelocity(velocity.x, velocity.y, btvec.z-1.0);
+		var loc = object.transform.world.getLoc();
+		var rot = object.transform.rot;
+		var radius = object.transform.dim.y * 0.5;
+		var height = object.transform.dim.z * 0.5;
+
+		groundTest = OctagonalRayCast.getCylinder(loc, rot, groundMask, radius, radius, -(height + extraRange));
+
+
+		if (groundTest==null) {		//ie. is on air
 			rb.enableGravity();
 		}
-		else{
-
-			//Move
-			rb.disableGravity();
-			velocity.set(moveX.value(), moveY.value(), 0.0);
-			velocity.normalize(); // Normalize the vector to don't go too fast diagonally. You can remove this line to see what happens
-			velocity.mult(speed+run_speed*sprint.value());											// for run
-			helpQuat.fromTo(object.transform.right(), Scene.active.camera.transform.right());
-			velocity.applyQuat(helpQuat);
-			helpQuat.fromTo(Vec4.zAxis(), hit.normal);
-			velocity.applyQuat(helpQuat);
-			rb.setLinearVelocity(velocity.x, velocity.y, velocity.z + jumpImpulse * jump.value());	//for Jumping
-
+		else{						//is on land
+				//Move
+				rb.disableGravity();
+				velocity.set(moveX.value(), moveY.value(), 0.0);
+				velocity.normalize(); // Normalize the vector to don't go too fast diagonally. You can remove this line to see what happens
+				velocity.mult(speed+run_speed*sprint.value());											// for run
+				helpQuat.fromTo(object.transform.right(), Scene.active.camera.transform.right());
+				velocity.applyQuat(helpQuat);
+				helpQuat.fromTo(Vec4.zAxis(), groundTest.normal);
+				velocity.applyQuat(helpQuat);
+				rb.setLinearVelocity(velocity.x, velocity.y, velocity.z + jumpImpulse * jump.value());	//for Jumping
 		}
 			
 	}
