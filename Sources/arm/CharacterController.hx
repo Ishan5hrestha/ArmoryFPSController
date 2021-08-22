@@ -42,6 +42,7 @@ class CharacterController extends iron.Trait {
 
 	var state = "idle";
 	
+	var armature : Object;
 	var transform : Transform;
 	var animation : BoneAnimation;
 
@@ -72,9 +73,9 @@ class CharacterController extends iron.Trait {
 		Input.getMouse().lock();
 
 		transform = object.transform;
-		animation = findAnimation(object.getParentArmature("Armature"));
-		//setState("Run",animation);
-		animation.play("Run", null,0.8);
+		armature = object.getChild("Armature");
+		animation = findAnimation(armature);
+		//animation = findAnimation(object.getChild("Armature"));
 		physWorld.notifyOnPreUpdate(update);
 	}
 
@@ -90,6 +91,7 @@ class CharacterController extends iron.Trait {
 
 		if (groundTest==null) {		//ie. is on air
 			rb.enableGravity();
+
 		}
 		else{						//is on land
 				//Move
@@ -102,15 +104,20 @@ class CharacterController extends iron.Trait {
 				helpQuat.fromTo(Vec4.zAxis(), groundTest.normal);
 				velocity.applyQuat(helpQuat);
 				rb.setLinearVelocity(velocity.x, velocity.y, velocity.z + jumpImpulse * jump.value());	//for Jumping
-				trace(rb.getLinearVelocity());
 		}
+		trace(moveY.value());
+		if (moveY.value()==1) setState("Walk",animation,1,0.2);
+		if (moveY.value()==-1) setState("Walk",animation,-1,0.2);
+		if (moveY.value()==0 && moveX.value()==0) setState("Idle",animation,1,0.8);
+		if (moveY.started() && sprint.started()) setState("Run",animation);
+		//if (moveY==1) setState("Run",animation,1,0.8);
 			
 	}
-	// function setState(s:String, arm: iron.object.BoneAnimation, speed = 1.0, blend = 0.2) {
-	// 	if (s == state) return;
-	// 	state = s;
-	// 	arm.play(s, null, blend, speed);
-	// }
+	function setState(s:String, arm: iron.object.BoneAnimation, speed = 1.0, blend = 0.2) {
+		if (s == state) return;
+		state = s;
+		arm.play(s, null, blend, speed);
+	}
 	function findAnimation(o:Object):BoneAnimation {
 		if (o.animation != null) return cast o.animation;
 		for (c in o.children) {

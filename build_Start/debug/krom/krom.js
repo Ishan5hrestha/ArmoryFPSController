@@ -469,6 +469,7 @@ arm_CharacterController.prototype = $extend(iron_Trait.prototype,{
 	,gravity: null
 	,jumpImpulse: null
 	,state: null
+	,armature: null
 	,transform: null
 	,animation: null
 	,init: function() {
@@ -487,7 +488,8 @@ arm_CharacterController.prototype = $extend(iron_Trait.prototype,{
 		this.sprint.addKeyboard("shift");
 		iron_system_Input.getMouse().lock();
 		this.transform = this.object.transform;
-		this.animation = this.findAnimation(this.object.getChild("Armature"));
+		this.armature = this.object.getChild("Armature");
+		this.animation = this.findAnimation(this.armature);
 		this.physWorld.notifyOnPreUpdate($bind(this,this.update));
 	}
 	,update: function() {
@@ -499,7 +501,6 @@ arm_CharacterController.prototype = $extend(iron_Trait.prototype,{
 		this.groundTest = internal_OctagonalRayCast.getCylinder(loc,rot,this.groundMask,radius,radius,-(height + this.extraRange));
 		if(this.groundTest == null) {
 			this.rb.enableGravity();
-			this.animation.play("Run",null,0.8);
 		} else {
 			this.rb.disableGravity();
 			var _this = this.velocity;
@@ -762,8 +763,33 @@ arm_CharacterController.prototype = $extend(iron_Trait.prototype,{
 			_this.y = iy * q.w + iw * -q.y + iz * -q.x - ix * -q.z;
 			_this.z = iz * q.w + iw * -q.z + ix * -q.y - iy * -q.x;
 			this.rb.setLinearVelocity(this.velocity.x,this.velocity.y,this.velocity.z + this.jumpImpulse * this.jump.value());
-			haxe_Log.trace(this.rb.getLinearVelocity(),{ fileName : "arm/CharacterController.hx", lineNumber : 105, className : "arm.CharacterController", methodName : "update"});
 		}
+		haxe_Log.trace(this.moveY.value(),{ fileName : "arm/CharacterController.hx", lineNumber : 108, className : "arm.CharacterController", methodName : "update"});
+		if(this.moveY.value() == 1) {
+			this.setState("Walk",this.animation,1,0.2);
+		}
+		if(this.moveY.value() == -1) {
+			this.setState("Walk",this.animation,-1,0.2);
+		}
+		if(this.moveY.value() == 0 && this.moveX.value() == 0) {
+			this.setState("Idle",this.animation,1,0.8);
+		}
+		if(this.moveY.started() && this.sprint.started()) {
+			this.setState("Run",this.animation);
+		}
+	}
+	,setState: function(s,arm,speed,blend) {
+		if(blend == null) {
+			blend = 0.2;
+		}
+		if(speed == null) {
+			speed = 1.0;
+		}
+		if(s == this.state) {
+			return;
+		}
+		this.state = s;
+		arm.play(s,null,blend,speed);
 	}
 	,findAnimation: function(o) {
 		if(o.animation != null) {
