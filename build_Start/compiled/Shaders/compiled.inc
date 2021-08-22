@@ -22,6 +22,6 @@ const int shadowmapCascades = 4;
 const float ssaoRadius = 1.0;
 const float ssaoStrength = 1.0;
 const float ssaoScale = 20.0;
-const int skinMaxBones = 8;
+const int skinMaxBones = 67;
 
 #endif // _COMPILED_GLSL_

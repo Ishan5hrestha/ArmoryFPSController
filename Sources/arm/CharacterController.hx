@@ -5,11 +5,15 @@ import iron.math.Vec4;
 import iron.system.Time;
 import iron.math.Quat;
 import iron.system.Input;
+import iron.object.Object;
+import iron.object.Transform;
 import armory.trait.physics.RigidBody;
 import armory.trait.physics.bullet.PhysicsWorld;
 import armory.system.InputMap;
+import iron.object.BoneAnimation;
 
 import internal.OctagonalRayCast; // Import custom ray caster
+//import AnimationController;
 
 class CharacterController extends iron.Trait {
 
@@ -31,12 +35,15 @@ class CharacterController extends iron.Trait {
 	var groundMask = 1; // Ground search mask
 	var extraRange = 0.1;
 
-
 	var physWorld: PhysicsWorld; // Physics world
-
 	var gravity = new Vec4(0.0,0.0,-9.8);
 
 	var jumpImpulse = 7; // Jumping impulse
+
+	var state = "idle";
+	
+	var transform : Transform;
+	var animation : BoneAnimation;
 
 
 	public function new() {
@@ -64,6 +71,10 @@ class CharacterController extends iron.Trait {
 
 		Input.getMouse().lock();
 
+		transform = object.transform;
+		animation = findAnimation(object.getParentArmature("Armature"));
+		//setState("Run",animation);
+		animation.play("Run", null,0.8);
 		physWorld.notifyOnPreUpdate(update);
 	}
 
@@ -91,8 +102,22 @@ class CharacterController extends iron.Trait {
 				helpQuat.fromTo(Vec4.zAxis(), groundTest.normal);
 				velocity.applyQuat(helpQuat);
 				rb.setLinearVelocity(velocity.x, velocity.y, velocity.z + jumpImpulse * jump.value());	//for Jumping
+				trace(rb.getLinearVelocity());
 		}
 			
+	}
+	// function setState(s:String, arm: iron.object.BoneAnimation, speed = 1.0, blend = 0.2) {
+	// 	if (s == state) return;
+	// 	state = s;
+	// 	arm.play(s, null, blend, speed);
+	// }
+	function findAnimation(o:Object):BoneAnimation {
+		if (o.animation != null) return cast o.animation;
+		for (c in o.children) {
+			var co = findAnimation(c);
+			if (co != null) return co;
+		}
+		return null;
 	}
 }
 
